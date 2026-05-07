@@ -1,46 +1,52 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>Giảng viên - Quản lý lịch</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <title>Giảng viên - Quản lý lịch</title>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark">
-    <a class="navbar-brand">Hệ thống Smart Academic</a>
-    <div class="ml-auto text-white">
-        Chào GV: <b th:text="${session.userSession.profile.fullName}"></b> |
-        <a th:href="@{/logout}" class="text-danger">Đăng xuất</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Smart Academic</a>
+    <div class="navbar-text ml-auto">
+        Xin chào, <b th:text="${session.userSession.profile.fullName}"></b> |
+        <a href="/logout" class="text-danger">Đăng xuất</a>
     </div>
 </nav>
+
 <div class="container mt-4">
-    <h3>Danh sách yêu cầu hướng dẫn (Mentoring)</h3>
-    <table class="table table-striped mt-3">
-        <thead class="thead-dark">
+    <div class="d-flex justify-content-between mb-4">
+        <h2>Lịch tư vấn tôi đã tạo</h2>
+        <a href="/lecturer/mentoring/add" class="btn btn-success"> + Tạo lịch trống mới</a>
+    </div>
+
+    <table class="table table-bordered shadow-sm">
+        <thead class="thead-light">
         <tr>
-            <th>Sinh viên</th>
+            <th>Thời gian</th>
             <th>Chủ đề</th>
-            <th>Ngày yêu cầu</th>
-            <th>Phòng Lab</th>
+            <th>Sinh viên đăng ký</th>
+            <th>Thiết bị</th>
             <th>Trạng thái</th>
-            <th>Thao tác</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="s : ${sessions}">
-            <td th:text="${s.student.profile.fullName}"></td>
-            <td th:text="${s.topic}"></td>
+        <tr th:each="s : ${mySchedules}">
             <td th:text="${#dates.format(s.startTime, 'dd/MM/yyyy HH:mm')}"></td>
-            <td th:text="${s.labRoom.roomName}"></td>
+            <td th:text="${s.topic}"></td>
             <td>
-                <span th:text="${s.status}" th:classappend="${s.status == 'PENDING' ? 'badge badge-warning' : (s.status == 'APPROVED' ? 'badge badge-success' : 'badge badge-danger')}"></span>
+                <span th:if="${s.student != null}" th:text="${s.student.profile.fullName}"></span>
+                <span th:if="${s.student == null}" class="text-muted italic text-small">Chưa có ai đăng ký</span>
             </td>
+            <td th:text="${s.equipment != null ? s.equipment.name : 'Không'}"></td>
             <td>
-                <div th:if="${s.status == 'PENDING'}">
-                    <a th:href="@{'/lecturer/approve/' + ${s.id}}" class="btn btn-sm btn-success">Duyệt</a>
-                    <a th:href="@{'/lecturer/reject/' + ${s.id}}" class="btn btn-sm btn-danger">Từ chối</a>
-                </div>
+                <span th:if="${s.status == 'AVAILABLE'}" class="badge badge-info">Đang chờ SV</span>
+                <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Đang chờ duyệt</span>
+                <span th:if="${s.status == 'APPROVED'}" class="badge badge-success">Đã xác nhận</span>
             </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(mySchedules)}">
+            <td colspan="5" class="text-center">Bạn chưa tạo khung giờ tư vấn nào.</td>
         </tr>
         </tbody>
     </table>
