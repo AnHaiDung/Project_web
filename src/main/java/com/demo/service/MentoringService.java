@@ -17,6 +17,10 @@ public class MentoringService {
         mentoringSessionRepository.save(session);
     }
 
+    public MentoringSession getById(Long id) {
+        return mentoringSessionRepository.findById(id).orElse(null);
+    }
+
     public List<MentoringSession> getByStudent(User student) {
         return mentoringSessionRepository.findByStudent(student);
     }
@@ -26,7 +30,7 @@ public class MentoringService {
     }
 
     public void updateStatus(Long id, String status) {
-        MentoringSession session = mentoringSessionRepository.findById(id).orElse(null);
+        MentoringSession session = getById(id);
         if (session != null) {
             session.setStatus(status);
             mentoringSessionRepository.save(session);

@@ -29,4 +29,8 @@ public class MentoringSession {
     @ManyToOne
     @JoinColumn(name = "lab_room_id")
     private LabRoom labRoom;
+
+    @ManyToOne
+    @JoinColumn(name = "equipment_id")
+    private Equipment equipment;
 }

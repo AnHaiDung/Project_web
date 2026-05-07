@@ -11,55 +11,40 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Tạo phiếu yêu cầu cố vấn</h4>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label class="font-weight-bold">1. Chọn Khoa / Bộ môn:</label>
-                    <select class="form-control" onchange="window.location.href='/student/mentoring/add?deptId=' + this.value">
-                        <option value="">-- Click để chọn khoa --</option>
-                        <option th:each="d : ${departments}"
-                                th:value="${d.id}"
-                                th:text="${d.name}"
-                                th:selected="${param.deptId != null && param.deptId[0] == d.id.toString()}"></option>
-                    </select>
-                    <small class="text-muted">Hệ thống sẽ lọc giảng viên theo khoa bạn chọn.</small>
-                </div>
+    <div class="container">
+        <h3>Danh sách lịch tư vấn từ Giảng viên</h3>
 
-                <hr>
-
-                <form th:if="${lecturers != null}" th:action="@{/student/mentoring/save}" method="post" th:object="${sessionData}">
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">2. Chọn Giảng viên hướng dẫn:</label>
-                        <select name="lecturer.id" class="form-control" required>
-                            <option value="">-- Chọn giảng viên --</option>
-                            <option th:each="l : ${lecturers}"
-                                    th:value="${l.id}"
-                                    th:text="${l.profile.fullName + ' - ' + l.lecturer.labRoom.roomName}"></option>
-                        </select>
-                        <small class="text-info">Địa điểm (Phòng Lab) sẽ được tự động gán theo giảng viên.</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">3. Chủ đề cần tư vấn:</label>
-                        <input type="text" th:field="*{topic}" class="form-control" placeholder="Ví dụ: Tư vấn đồ án, Đăng ký môn học..." required>
-                    </div>
-
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-success px-5">Gửi phiếu yêu cầu</button>
-                        <a href="/student/home" class="btn btn-secondary">Quay lại</a>
-                    </div>
-                </form>
-
-                <div th:if="${lecturers == null}" class="alert alert-warning">
-                    Vui lòng chọn Khoa ở bước 1 để tiếp tục.
-                </div>
-            </div>
+        <div th:if="${#lists.isEmpty(availableSessions)}" class="alert alert-warning">
+            Hiện tại chưa có giảng viên nào tạo lịch tư vấn. Vui lòng quay lại sau.
         </div>
+
+        <table th:if="${!#lists.isEmpty(availableSessions)}" class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Giảng viên</th>
+                <th>Phòng Lab</th>
+                <th>Thiết bị</th>
+                <th>Thời gian</th>
+                <th>Chủ đề</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${availableSessions}">
+                <td th:text="${s.lecturer.profile.fullName}"></td>
+                <td th:text="${s.labRoom.roomName}"></td>
+                <td th:text="${s.equipment != null ? s.equipment.name : 'Không có'}"></td>
+                <td th:text="${#dates.format(s.startTime, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${s.topic}"></td>
+                <td>
+                    <form th:action="@{/mentoring/student/register}" method="post">
+                        <input type="hidden" name="sessionId" th:value="${s.id}">
+                        <button type="submit" class="btn btn-success btn-sm">Đăng ký tham gia</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

@@ -2,6 +2,7 @@ package com.demo.controller;
 
 import com.demo.model.entity.*;
 import com.demo.repository.*;
+import com.demo.service.EquipmentService;
 import com.demo.service.MentoringService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,53 +13,67 @@ import java.util.Date;
 import java.util.List;
 
 @Controller
-@RequestMapping("/student/mentoring")
+@RequestMapping("/mentoring") // Đổi lại mapping dùng chung
 public class MentoringController {
 
     @Autowired
     private MentoringService mentoringService;
-
     @Autowired
-    private DepartmentRepository departmentRepository;
-
+    private EquipmentService equipmentService;
     @Autowired
-    private UserRepository userRepository;
+    private MentoringSessionRepository mentoringSessionRepository;
 
-    @GetMapping("/add")
-    public String addForm(@RequestParam(required = false) Long deptId, Model model, HttpSession session) {
+    @GetMapping("/lecturer/add")
+    public String lecturerAddForm(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("userSession");
+        if (user == null || !"LECTURER".equals(user.getRole())) return "redirect:/login";
+
+        model.addAttribute("equipments", equipmentService.getAll());
+        model.addAttribute("sessionData", new MentoringSession());
+        return "lecturer/create_schedule";
+    }
+
+    @PostMapping("/lecturer/save")
+    public String lecturerSave(@ModelAttribute MentoringSession mSession,
+                               @RequestParam Long equipmentId,
+                               HttpSession session) {
+        User lecturer = (User) session.getAttribute("userSession");
+
+        mSession.setLecturer(lecturer);
+        mSession.setLabRoom(lecturer.getLecturer().getLabRoom());
+        mSession.setStatus("AVAILABLE");
+
+        if (equipmentId != null) {
+            mSession.setEquipment(equipmentService.getById(equipmentId));
+        }
+
+        mentoringService.save(mSession);
+        return "redirect:/lecturer/home";
+    }
+
+    @GetMapping("/student/add")
+    public String studentAddForm(Model model, HttpSession session) {
         User user = (User) session.getAttribute("userSession");
         if (user == null || !"STUDENT".equals(user.getRole())) return "redirect:/login";
 
-        model.addAttribute("departments", departmentRepository.findAll());
+        List<MentoringSession> availableSessions = mentoringSessionRepository.findAll().stream()
+                .filter(s -> "AVAILABLE".equals(s.getStatus()))
+                .toList();
 
-        if (deptId != null) {
-            List<User> lecturers = userRepository.findAll().stream()
-                    .filter(u -> "LECTURER".equals(u.getRole())
-                            && u.getLecturer() != null
-                            && u.getLecturer().getDepartment().getId().equals(deptId))
-                    .toList();
-            model.addAttribute("lecturers", lecturers);
-        }
-
-        model.addAttribute("sessionData", new MentoringSession());
+        model.addAttribute("availableSessions", availableSessions);
         return "student/mentoring_form";
     }
 
-    @PostMapping("/save")
-    public String save(@ModelAttribute MentoringSession mSession, HttpSession session) {
+    @PostMapping("/student/register")
+    public String studentRegister(@RequestParam Long sessionId, HttpSession session) {
         User student = (User) session.getAttribute("userSession");
-        if (student == null) return "redirect:/login";
+        MentoringSession mSession = mentoringService.getById(sessionId);
 
-        User selectedLecturer = userRepository.findById(mSession.getLecturer().getId()).orElse(null);
-        if (selectedLecturer != null && selectedLecturer.getLecturer() != null) {
-            mSession.setLabRoom(selectedLecturer.getLecturer().getLabRoom());
+        if (mSession != null && student != null) {
+            mSession.setStudent(student);
+            mSession.setStatus("PENDING");
+            mentoringService.save(mSession);
         }
-
-        mSession.setStudent(student);
-        mSession.setStartTime(new Date());
-        mSession.setStatus("PENDING");
-
-        mentoringService.save(mSession);
         return "redirect:/student/home";
     }
 }
