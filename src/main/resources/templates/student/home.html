@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <title>Title</title>
     <!-- Required meta tags -->
@@ -11,51 +11,43 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Smart Academic</a>
-        <div class="navbar-text ml-auto">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand">Smart Academic - Sinh viên</a>
+        <div class="ml-auto text-white">
             Xin chào, <b th:text="${session.userSession.profile.fullName}"></b> |
-            <a href="/logout" class="text-danger">Đăng xuất</a>
+            <a th:href="@{/logout}" class="text-white">Đăng xuất</a>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Lịch hẹn cố vấn của tôi</h2>
-            <a href="/student/mentoring/add" class="btn btn-primary">Đăng ký lịch mới</a>
+        <div class="d-flex justify-content-between">
+            <h2>Lịch hẹn của tôi</h2>
+            <a th:href="@{/student/mentoring/add}" class="btn btn-success">Tạo yêu cầu mới</a>
         </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered bg-white shadow-sm">
-                <thead class="thead-light">
-                <tr>
-                    <th>Ngày gửi</th>
-                    <th>Chủ đề</th>
-                    <th>Giảng viên</th>
-                    <th>Địa điểm (Phòng Lab)</th>
-                    <th>Trạng thái</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="s : ${mySessions}">
-                    <td th:text="${#dates.format(s.startTime, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${s.topic}"></td>
-                    <td th:text="${s.lecturer.profile.fullName}"></td>
-                    <td>
-                        <span class="badge badge-info" th:text="${s.labRoom.roomName}"></span>
-                    </td>
-                    <td>
-                        <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Chờ duyệt</span>
-                        <span th:if="${s.status == 'APPROVED'}" class="badge badge-success">Đã chấp nhận</span>
-                        <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Từ chối</span>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(mySessions)}">
-                    <td colspan="5" class="text-center">Bạn chưa có yêu cầu cố vấn nào.</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        <table class="table table-hover mt-3">
+            <thead>
+            <tr>
+                <th>Ngày</th>
+                <th>Giảng viên</th>
+                <th>Phòng Lab</th>
+                <th>Chủ đề</th>
+                <th>Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${mySessions}">
+                <td th:text="${#dates.format(s.startTime, 'dd/MM/yyyy')}"></td>
+                <td th:text="${s.lecturer.profile.fullName}"></td>
+                <td th:text="${s.labRoom.roomName}"></td>
+                <td th:text="${s.topic}"></td>
+                <td>
+                    <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Đang chờ</span>
+                    <span th:if="${s.status == 'APPROVED'}" class="badge badge-success">Đã duyệt</span>
+                    <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Bị từ chối</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

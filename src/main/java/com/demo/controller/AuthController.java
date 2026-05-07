@@ -52,14 +52,9 @@ public class AuthController {
         return "admin/home";
     }
 
-    @GetMapping("/lecturer/home")
-    public String lecturerHome(HttpSession session) {
-        if (isNotRole(session, "LECTURER")) return "redirect:/login";
-        return "lecturer/home";
-    }
 
     @GetMapping("/student/home")
-    public String studentHome(HttpSession session, Model model) { // Thêm Model vào tham số
+    public String studentHome(HttpSession session, Model model) {
         User user = (User) session.getAttribute("userSession");
 
         if (user == null || !"STUDENT".equals(user.getRole())) {

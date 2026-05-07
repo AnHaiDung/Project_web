@@ -6,7 +6,7 @@ import com.demo.repository.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -15,15 +15,14 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Transactional
     public void register(User user) {
-        // 1. Mã hóa mật khẩu
         String hashPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
         user.setPassword(hashPassword);
 
         if (user.getRole() == null) {
             user.setRole("STUDENT");
         }
-
 
         if (user.getProfile() == null) {
             UserProfile profile = new UserProfile();
@@ -39,10 +38,11 @@ public class UserService {
 
     public User checkLogin(String username, String password) {
         Optional<User> userOpt = userRepository.findByUsername(username);
-
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (BCrypt.checkpw(password, user.getPassword())) {
+                if (user.getProfile() != null) user.getProfile().getFullName();
+                if (user.getLecturer() != null) user.getLecturer().getId();
                 return user;
             }
         }
