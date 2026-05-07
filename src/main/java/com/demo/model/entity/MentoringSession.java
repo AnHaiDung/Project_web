@@ -1,0 +1,32 @@
+package com.demo.model.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.Date;
+
+@Entity
+@Table(name = "mentoring_sessions")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
+public class MentoringSession {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String topic;
+    private Date startTime;
+    private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
+
+    @ManyToOne
+    @JoinColumn(name = "lecturer_id")
+    private User lecturer;
+
+    @ManyToOne
+    @JoinColumn(name = "lab_room_id")
+    private LabRoom labRoom;
+}

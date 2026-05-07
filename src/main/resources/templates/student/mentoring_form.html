@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Tạo phiếu yêu cầu cố vấn</h4>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="font-weight-bold">1. Chọn Khoa / Bộ môn:</label>
+                    <select class="form-control" onchange="window.location.href='/student/mentoring/add?deptId=' + this.value">
+                        <option value="">-- Click để chọn khoa --</option>
+                        <option th:each="d : ${departments}"
+                                th:value="${d.id}"
+                                th:text="${d.name}"
+                                th:selected="${param.deptId != null && param.deptId[0] == d.id.toString()}"></option>
+                    </select>
+                    <small class="text-muted">Hệ thống sẽ lọc giảng viên theo khoa bạn chọn.</small>
+                </div>
+
+                <hr>
+
+                <form th:if="${lecturers != null}" th:action="@{/student/mentoring/save}" method="post" th:object="${sessionData}">
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">2. Chọn Giảng viên hướng dẫn:</label>
+                        <select name="lecturer.id" class="form-control" required>
+                            <option value="">-- Chọn giảng viên --</option>
+                            <option th:each="l : ${lecturers}"
+                                    th:value="${l.id}"
+                                    th:text="${l.profile.fullName + ' - ' + l.lecturer.labRoom.roomName}"></option>
+                        </select>
+                        <small class="text-info">Địa điểm (Phòng Lab) sẽ được tự động gán theo giảng viên.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">3. Chủ đề cần tư vấn:</label>
+                        <input type="text" th:field="*{topic}" class="form-control" placeholder="Ví dụ: Tư vấn đồ án, Đăng ký môn học..." required>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success px-5">Gửi phiếu yêu cầu</button>
+                        <a href="/student/home" class="btn btn-secondary">Quay lại</a>
+                    </div>
+                </form>
+
+                <div th:if="${lecturers == null}" class="alert alert-warning">
+                    Vui lòng chọn Khoa ở bước 1 để tiếp tục.
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>
