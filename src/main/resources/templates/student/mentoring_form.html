@@ -1,61 +1,73 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Title</title>
-    <!-- Required meta tags -->
+    <title>Đăng ký lịch tư vấn</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h3>Danh sách lịch tư vấn từ Giảng viên</h3>
+<div class="container mt-4">
+    <h3>Danh sách lịch tư vấn từ Giảng viên</h3>
 
-        <div th:if="${#lists.isEmpty(availableSessions)}" class="alert alert-warning">
-            Hiện tại chưa có giảng viên nào tạo lịch tư vấn. Vui lòng quay lại sau.
+    <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
+
+    <form th:action="@{/mentoring/student/add}" method="get" class="mb-3">
+        <div class="form-group">
+            <label>Chọn Khoa / Ngành</label>
+            <select name="departmentId" class="form-control" onchange="this.form.submit()">
+                <option value="">-- Tất cả khoa/ngành --</option>
+                <option th:each="d : ${departments}"
+                        th:value="${d.id}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartmentId != null && d.id.equals(selectedDepartmentId)}">
+                </option>
+            </select>
         </div>
+    </form>
 
-        <table th:if="${!#lists.isEmpty(availableSessions)}" class="table table-bordered">
-            <thead>
-            <tr>
-                <th>Giảng viên</th>
-                <th>Phòng Lab</th>
-                <th>Thiết bị</th>
-                <th>Thời gian</th>
-                <th>Chủ đề</th>
-                <th>Hành động</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="s : ${availableSessions}">
-                <td th:text="${s.lecturer.profile.fullName}"></td>
-                <td th:text="${s.labRoom.roomName}"></td>
-                <td th:text="${s.equipment != null ? s.equipment.name : 'Không có'}"></td>
-                <td th:text="${#dates.format(s.startTime, 'dd/MM/yyyy HH:mm')}"></td>
-                <td th:text="${s.topic}"></td>
-                <td>
-                    <form th:action="@{/mentoring/student/register}" method="post">
-                        <input type="hidden" name="sessionId" th:value="${s.id}">
-                        <button type="submit" class="btn btn-success btn-sm">Đăng ký tham gia</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div th:if="${availableSessions == null || #lists.isEmpty(availableSessions)}" class="alert alert-warning">
+        Hiện tại chưa có lịch tư vấn phù hợp.
     </div>
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
+
+    <table th:if="${availableSessions != null && !#lists.isEmpty(availableSessions)}" class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Giảng viên</th>
+            <th>Khoa / Ngành</th>
+            <th>Phòng Lab</th>
+            <th>Thiết bị</th>
+            <th>Thời gian</th>
+            <th>Chủ đề</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="s : ${availableSessions}">
+            <td th:text="${s.lecturer != null && s.lecturer.profile != null ? s.lecturer.profile.fullName : 'Không rõ'}"></td>
+
+            <td th:text="${s.lecturer != null && s.lecturer.lecturer != null && s.lecturer.lecturer.department != null ? s.lecturer.lecturer.department.name : 'Chưa có khoa'}"></td>
+
+            <td th:text="${s.labRoom != null ? s.labRoom.roomName : 'Chưa có phòng'}"></td>
+
+            <td th:text="${s.equipment != null ? s.equipment.name : 'Không có'}"></td>
+
+            <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
+
+            <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
+
+            <td>
+                <form th:action="@{/mentoring/student/register}" method="post">
+                    <input type="hidden" name="sessionId" th:value="${s.id}">
+                    <button type="submit" class="btn btn-success btn-sm">Tạo phiếu đăng ký</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/student/home}" class="btn btn-secondary">Quay lại</a>
+</div>
 </body>
 </html>

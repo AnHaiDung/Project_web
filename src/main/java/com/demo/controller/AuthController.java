@@ -29,14 +29,20 @@ public class AuthController {
                           Model model,
                           HttpSession session) {
 
-        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            model.addAttribute("msgError", "Vui lòng không để trống tài khoản/mật khẩu  ");
+        if (username == null || username.trim().isEmpty()) {
+            model.addAttribute("usernameError", "Tên đăng nhập không được để trống");
+            return "login";
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            model.addAttribute("passwordError", "Mật khẩu không được để trống");
             return "login";
         }
 
         User user = userService.checkLogin(username, password);
         if (user != null) {
             session.setAttribute("userSession", user);
+
             if ("ADMIN".equals(user.getRole())) return "redirect:/admin/home";
             if ("LECTURER".equals(user.getRole())) return "redirect:/lecturer/home";
             return "redirect:/student/home";
@@ -52,7 +58,6 @@ public class AuthController {
         return "admin/home";
     }
 
-
     @GetMapping("/student/home")
     public String studentHome(HttpSession session, Model model) {
         User user = (User) session.getAttribute("userSession");
@@ -62,13 +67,7 @@ public class AuthController {
         }
 
         model.addAttribute("mySessions", mentoringService.getByStudent(user));
-
         return "student/home";
-    }
-
-    private boolean isNotRole(HttpSession session, String role) {
-        User user = (User) session.getAttribute("userSession");
-        return user == null || !role.equals(user.getRole());
     }
 
     @GetMapping("/register")
@@ -78,13 +77,30 @@ public class AuthController {
 
     @PostMapping("/register")
     public String doRegister(@ModelAttribute User user, Model model) {
+        if (user.getProfile() == null ||
+                user.getProfile().getFullName() == null ||
+                user.getProfile().getFullName().trim().isEmpty()) {
+            model.addAttribute("fullNameError", "Họ tên không được để trống");
+            return "register";
+        }
+
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            model.addAttribute("msgError", "Tên đăng nhập không được để trống");
+            model.addAttribute("usernameError", "Tên đăng nhập không được để trống");
+            return "register";
+        }
+
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            model.addAttribute("passwordError", "Mật khẩu không được để trống");
+            return "register";
+        }
+
+        if (user.getPassword().trim().length() < 6) {
+            model.addAttribute("passwordError", "Mật khẩu phải có ít nhất 6 ký tự");
             return "register";
         }
 
         if (userService.isUsernameExist(user.getUsername())) {
-            model.addAttribute("msgError", "Tên đăng nhập này đã tồn tại");
+            model.addAttribute("usernameError", "Tên đăng nhập này đã tồn tại");
             return "register";
         }
 
@@ -96,5 +112,10 @@ public class AuthController {
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login";
+    }
+
+    private boolean isNotRole(HttpSession session, String role) {
+        User user = (User) session.getAttribute("userSession");
+        return user == null || !role.equals(user.getRole());
     }
 }

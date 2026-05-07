@@ -2,6 +2,8 @@ package com.demo.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.util.Date;
 
 @Entity
@@ -15,6 +17,7 @@ public class MentoringSession {
     private Long id;
 
     private String topic;
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private Date startTime;
     private String status;
 
