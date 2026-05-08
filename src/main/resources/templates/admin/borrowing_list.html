@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Phiếu chờ cấp phát</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h3>Phiếu mượn chờ cấp phát</h3>
+
+    <div th:if="${msgSuccess}" class="alert alert-success" th:text="${msgSuccess}"></div>
+    <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
+
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Sinh viên</th>
+            <th>Lịch tư vấn</th>
+            <th>Thiết bị</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="b : ${borrowings}">
+            <td th:text="${b.id}"></td>
+            <td th:text="${b.student != null && b.student.profile != null ? b.student.profile.fullName : 'Không rõ'}"></td>
+            <td th:text="${b.session != null && b.session.startTime != null ? #dates.format(b.session.startTime, 'dd/MM/yyyy HH:mm') : 'Không rõ'}"></td>
+            <td>
+                <div th:if="${b.details == null || #lists.isEmpty(b.details)}">Không có thiết bị</div>
+                <div th:each="d : ${b.details}">
+                    <span th:text="${d.equipment.name}"></span>
+                    x
+                    <span th:text="${d.quantity}"></span>
+                    <span class="text-muted" th:text="${'(Tồn: ' + d.equipment.quantity + ')'}"></span>
+                </div>
+            </td>
+            <td><span class="badge badge-warning" th:text="${b.status}"></span></td>
+            <td>
+                <form th:action="@{/admin/borrowings/export/{id}(id=${b.id})}" method="post">
+                    <button type="submit" class="btn btn-success btn-sm"
+                            onclick="return confirm('Xác nhận xuất kho phiếu này?')">Xác nhận xuất kho</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${borrowings == null || #lists.isEmpty(borrowings)}">
+            <td colspan="6" class="text-center text-muted">Không có phiếu nào đang chờ cấp phát.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/admin/home}" class="btn btn-secondary">Quay lại Dashboard</a>
+</div>
+</body>
+</html>

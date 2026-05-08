@@ -3,17 +3,22 @@ package com.demo.controller;
 import com.demo.model.entity.Equipment;
 import com.demo.model.entity.User;
 import com.demo.service.EquipmentService;
+import com.demo.service.MentoringService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
     @Autowired
     private EquipmentService equipmentService;
+
+    @Autowired
+    private MentoringService mentoringService;
 
     private boolean isAdmin(HttpSession session) {
         User user = (User) session.getAttribute("userSession");
@@ -53,5 +58,28 @@ public class AdminController {
         if (!isAdmin(session)) return "redirect:/login";
         equipmentService.delete(id);
         return "redirect:/admin/equipments";
+    }
+
+    @GetMapping("/borrowings")
+    public String waitingBorrowings(HttpSession session, Model model) {
+        if (!isAdmin(session)) return "redirect:/login";
+        model.addAttribute("borrowings", mentoringService.getWaitingAllocationRecords());
+        return "admin/borrowing_list";
+    }
+
+    @PostMapping("/borrowings/export/{id}")
+    public String confirmExport(@PathVariable Long id,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) return "redirect:/login";
+
+        try {
+            mentoringService.confirmExport(id);
+            redirectAttributes.addFlashAttribute("msgSuccess", "Xuất kho thành công");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("msgError", ex.getMessage());
+        }
+
+        return "redirect:/admin/borrowings";
     }
 }

@@ -22,16 +22,15 @@
     <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
 
     <div class="d-flex justify-content-between align-items-center">
-        <h2>Lịch hẹn của tôi</h2>
-        <a th:href="@{/mentoring/student/add}" class="btn btn-success">Tạo yêu cầu mới</a>
+        <h2>Lịch tư vấn của tôi</h2>
+        <a th:href="@{/mentoring/student/add}" class="btn btn-success">Đặt lịch mới</a>
     </div>
 
     <table class="table table-hover mt-3">
         <thead>
         <tr>
-            <th>Ngày</th>
+            <th>Thời gian</th>
             <th>Giảng viên</th>
-            <th>Phòng Lab</th>
             <th>Chủ đề</th>
             <th>Trạng thái</th>
         </tr>
@@ -40,26 +39,19 @@
         <tbody>
         <tr th:each="s : ${mySessions}">
             <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
-
             <td th:text="${s.lecturer != null && s.lecturer.profile != null ? s.lecturer.profile.fullName : 'Không rõ'}"></td>
-
-            <td th:text="${s.labRoom != null ? s.labRoom.roomName : 'Chưa có phòng'}"></td>
-
             <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
-
             <td>
-                <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Đang chờ</span>
-                <span th:if="${s.status == 'APPROVED'}" class="badge badge-success">Đã duyệt</span>
+                <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Chờ xác nhận</span>
+                <span th:if="${s.status == 'WAITING_ALLOCATION'}" class="badge badge-info">Chờ cấp phát</span>
+                <span th:if="${s.status == 'EXPORTED'}" class="badge badge-success">Đã xuất kho</span>
                 <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Bị từ chối</span>
-                <span th:if="${s.status == 'AVAILABLE'}" class="badge badge-info">Còn trống</span>
                 <span th:if="${s.status == null}" class="badge badge-secondary">Chưa có trạng thái</span>
             </td>
         </tr>
 
         <tr th:if="${mySessions == null || #lists.isEmpty(mySessions)}">
-            <td colspan="5" class="text-center text-muted">
-                Bạn chưa đăng ký lịch tư vấn nào.
-            </td>
+            <td colspan="4" class="text-center text-muted">Bạn chưa đặt lịch tư vấn nào.</td>
         </tr>
         </tbody>
     </table>

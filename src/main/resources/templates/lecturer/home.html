@@ -3,25 +3,12 @@
 <head>
     <title>Giảng viên - Trang chủ</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <style>
-        .table-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        .badge-available {
-            background-color: #17a2b8;
-            color: white;
-        }
-    </style>
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Smart Academic</a>
+    <a class="navbar-brand" href="#">Smart Academic - Giảng viên</a>
     <div class="navbar-text ml-auto">
         Xin chào,
         <b th:text="${session.userSession.profile != null ? session.userSession.profile.fullName : session.userSession.username}"></b>
@@ -31,68 +18,100 @@
 </nav>
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Quản lý lịch tư vấn</h2>
-        <a th:href="@{/mentoring/lecturer/add}" class="btn btn-success font-weight-bold">
-            + Tạo khung giờ trống
-        </a>
+    <div th:if="${msgSuccess}" class="alert alert-success" th:text="${msgSuccess}"></div>
+    <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
+
+    <h3>Danh sách sinh viên chờ tư vấn</h3>
+
+    <div th:if="${pendingSessions == null || #lists.isEmpty(pendingSessions)}" class="alert alert-info">
+        Hiện chưa có sinh viên nào chờ tư vấn.
     </div>
 
-    <div class="table-container">
-        <table class="table table-hover">
-            <thead class="thead-dark">
-            <tr>
-                <th>Thời gian</th>
-                <th>Chủ đề</th>
-                <th>Sinh viên đăng ký</th>
-                <th>Phòng Lab</th>
-                <th>Trạng thái</th>
-            </tr>
-            </thead>
+    <div th:each="s : ${pendingSessions}" class="card mb-3">
+        <div class="card-header">
+            <b th:text="${s.student != null && s.student.profile != null ? s.student.profile.fullName : 'Sinh viên'}"></b>
+            -
+            <span th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></span>
+        </div>
+        <div class="card-body">
+            <p>
+                <b>Chủ đề:</b>
+                <span th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></span>
+            </p>
 
-            <tbody>
-            <tr th:each="s : ${mySchedules}">
-                <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
+            <form th:action="@{/lecturer/complete}" method="post">
+                <input type="hidden" name="sessionId" th:value="${s.id}">
 
-                <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
+                <div class="form-group">
+                    <label>Đánh giá năng lực</label>
+                    <select name="competencyLevel" class="form-control" required>
+                        <option value="">-- Chọn mức đánh giá --</option>
+                        <option value="Tốt">Tốt</option>
+                        <option value="Khá">Khá</option>
+                        <option value="Trung bình">Trung bình</option>
+                        <option value="Cần cải thiện">Cần cải thiện</option>
+                    </select>
+                </div>
 
-                <td>
-                    <span th:if="${s.student != null && s.student.profile != null}"
-                          th:text="${s.student.profile.fullName}"></span>
+                <div class="form-group">
+                    <label>Nhận xét</label>
+                    <textarea name="comment" class="form-control" rows="3" required></textarea>
+                </div>
 
-                    <span th:if="${s.student != null && s.student.profile == null}"
-                          th:text="${s.student.username}"></span>
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label>Thiết bị/Tài liệu cần cấp</label>
+                        <select name="equipmentId" class="form-control">
+                            <option value="">-- Không cấp thiết bị --</option>
+                            <option th:each="e : ${equipments}"
+                                    th:value="${e.id}"
+                                    th:text="${e.name + ' - tồn kho: ' + e.quantity}">
+                            </option>
+                        </select>
+                    </div>
 
-                    <span th:if="${s.student == null}" class="text-muted small italic">
-                        Đang chờ đăng ký...
-                    </span>
-                </td>
+                    <div class="form-group col-md-4">
+                        <label>Số lượng</label>
+                        <input type="number" name="quantity" class="form-control" min="1" value="1">
+                    </div>
+                </div>
 
-                <td>
-                    <span class="badge badge-secondary"
-                          th:text="${s.labRoom != null ? s.labRoom.roomName : 'Chưa có phòng'}"></span>
-                </td>
-
-                <td>
-                    <span th:if="${s.status == 'AVAILABLE'}" class="badge badge-available">Sẵn sàng</span>
-                    <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Chờ duyệt</span>
-                    <span th:if="${s.status == 'APPROVED'}" class="badge badge-success">Đã xác nhận</span>
-                    <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Đã từ chối</span>
-                    <span th:if="${s.status == null}" class="badge badge-secondary">Chưa có trạng thái</span>
-                </td>
-            </tr>
-
-            <tr th:if="${mySchedules == null || #lists.isEmpty(mySchedules)}">
-                <td colspan="5" class="text-center text-muted">
-                    Bạn chưa tạo lịch trống nào. Hãy nhấn nút "Tạo khung giờ trống" để bắt đầu.
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                <button type="submit" class="btn btn-primary">Lưu đánh giá & tạo phiếu cấp phát</button>
+                <a th:href="@{/lecturer/reject/{id}(id=${s.id})}" class="btn btn-danger"
+                   onclick="return confirm('Từ chối lịch tư vấn này?')">Từ chối</a>
+            </form>
+        </div>
     </div>
+
+    <hr>
+
+    <h4>Tất cả lịch tư vấn của tôi</h4>
+    <table class="table table-bordered table-hover bg-white">
+        <thead class="thead-dark">
+        <tr>
+            <th>Thời gian</th>
+            <th>Sinh viên</th>
+            <th>Chủ đề</th>
+            <th>Trạng thái</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${allSessions}">
+            <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
+            <td th:text="${s.student != null && s.student.profile != null ? s.student.profile.fullName : 'Không rõ'}"></td>
+            <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
+            <td>
+                <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Chờ xác nhận</span>
+                <span th:if="${s.status == 'WAITING_ALLOCATION'}" class="badge badge-info">Chờ cấp phát</span>
+                <span th:if="${s.status == 'EXPORTED'}" class="badge badge-success">Đã xuất kho</span>
+                <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Bị từ chối</span>
+            </td>
+        </tr>
+        <tr th:if="${allSessions == null || #lists.isEmpty(allSessions)}">
+            <td colspan="4" class="text-center text-muted">Chưa có lịch tư vấn nào.</td>
+        </tr>
+        </tbody>
+    </table>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>

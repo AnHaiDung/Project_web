@@ -1,7 +1,13 @@
 package com.demo.config;
 
-import com.demo.model.entity.*;
-import com.demo.repository.*;
+import com.demo.model.entity.Department;
+import com.demo.model.entity.LabRoom;
+import com.demo.model.entity.Lecturer;
+import com.demo.model.entity.User;
+import com.demo.model.entity.UserProfile;
+import com.demo.repository.DepartmentRepository;
+import com.demo.repository.LabRoomRepository;
+import com.demo.repository.UserRepository;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -13,9 +19,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
-    private EquipmentRepository eqRepo;
-
-    @Autowired
     private DepartmentRepository departmentRepository;
 
     @Autowired
@@ -24,27 +27,15 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public CommandLineRunner initData(UserRepository userRepository) {
         return args -> {
-            // Khởi tạo Department
-            Department itDept = null;
-            if (departmentRepository.count() == 0) {
-                itDept = new Department(null, "Công nghệ thông tin");
-                departmentRepository.save(itDept);
-                departmentRepository.save(new Department(null, "Kinh tế"));
-                departmentRepository.save(new Department(null, "Ngôn ngữ Anh"));
-            } else {
-                itDept = departmentRepository.findAll().get(0);
-            }
+            Department cntt = seedDepartment("Công nghệ thông tin");
+            Department kinhTe = seedDepartment("Kinh tế");
+            Department ngonNguAnh = seedDepartment("Ngôn ngữ Anh");
+            seedDepartment("Điện tử viễn thông");
 
-            // Khởi tạo LabRoom
-            LabRoom lab402 = null;
-            if (labRoomRepository.count() == 0) {
-                lab402 = new LabRoom(null, "Phòng Lab 402");
-                labRoomRepository.save(lab402);
-                labRoomRepository.save(new LabRoom(null, "Phòng Lab 505"));
-                labRoomRepository.save(new LabRoom(null, "Văn phòng khoa CNTT"));
-            } else {
-                lab402 = labRoomRepository.findAll().get(0);
-            }
+            seedLabRoom("Phòng Lab 402");
+            seedLabRoom("Phòng Lab 505");
+            seedLabRoom("Văn phòng khoa CNTT");
+            seedLabRoom("Phòng thực hành mạng");
 
             if (userRepository.findByUsername("admin").isEmpty()) {
                 User admin = User.builder()
@@ -62,26 +53,58 @@ public class WebConfig implements WebMvcConfigurer {
                 userRepository.save(admin);
             }
 
-            if (userRepository.findByUsername("gv01").isEmpty()) {
-                User gv = new User();
-                gv.setUsername("gv01");
-                gv.setPassword(BCrypt.hashpw("123456", BCrypt.gensalt()));
-                gv.setRole("LECTURER");
-
-                UserProfile profile = UserProfile.builder()
-                        .fullName("Giảng viên Nguyễn Văn A")
-                        .user(gv)
-                        .build();
-                gv.setProfile(profile);
-
-                Lecturer lecturer = new Lecturer();
-                lecturer.setDepartment(itDept);
-                lecturer.setLabRoom(lab402);
-                lecturer.setUser(gv);
-                gv.setLecturer(lecturer);
-
-                userRepository.save(gv);
-            }
+            seedLecturer(userRepository, "gv01", "123456", "Giảng viên Nguyễn Văn A", cntt);
+            seedLecturer(userRepository, "gv02", "123456", "Giảng viên Trần Thị B", kinhTe);
+            seedLecturer(userRepository, "gv03", "123456", "Giảng viên Lê Văn C", ngonNguAnh);
         };
+    }
+
+    private Department seedDepartment(String name) {
+        return departmentRepository.findByName(name)
+                .orElseGet(() -> departmentRepository.save(new Department(null, name)));
+    }
+
+    private void seedLabRoom(String roomName) {
+        boolean exists = labRoomRepository.findAll()
+                .stream()
+                .anyMatch(room -> roomName.equals(room.getRoomName()));
+
+        if (!exists) {
+            labRoomRepository.save(new LabRoom(null, roomName));
+        }
+    }
+
+    private void seedLecturer(UserRepository userRepository,
+                              String username,
+                              String password,
+                              String fullName,
+                              Department department) {
+        User user = userRepository.findByUsername(username).orElseGet(User::new);
+
+        if (user.getId() == null) {
+            user.setUsername(username);
+            user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        }
+
+        user.setRole("LECTURER");
+
+        UserProfile profile = user.getProfile();
+        if (profile == null) {
+            profile = new UserProfile();
+            profile.setUser(user);
+        }
+        profile.setFullName(fullName);
+        user.setProfile(profile);
+
+        Lecturer lecturer = user.getLecturer();
+        if (lecturer == null) {
+            lecturer = new Lecturer();
+            lecturer.setUser(user);
+        }
+        lecturer.setUser(user);
+        lecturer.setDepartment(department);
+        user.setLecturer(lecturer);
+
+        userRepository.save(user);
     }
 }

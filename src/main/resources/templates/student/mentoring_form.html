@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Đăng ký lịch tư vấn</title>
+    <title>Đặt lịch tư vấn</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-<div class="container mt-4">
-    <h3>Danh sách lịch tư vấn từ Giảng viên</h3>
+<div class="container mt-4" style="max-width: 720px;">
+    <h3>Đặt lịch cố vấn học tập</h3>
 
     <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
 
     <form th:action="@{/mentoring/student/add}" method="get" class="mb-3">
         <div class="form-group">
-            <label>Chọn Khoa / Ngành</label>
-            <select name="departmentId" class="form-control" onchange="this.form.submit()">
-                <option value="">-- Tất cả khoa/ngành --</option>
+            <label>Khoa / Ngành</label>
+            <select name="departmentId" class="form-control" onchange="this.form.submit()" required>
+                <option value="">-- Chọn khoa/ngành --</option>
                 <option th:each="d : ${departments}"
                         th:value="${d.id}"
                         th:text="${d.name}"
@@ -26,48 +26,36 @@
         </div>
     </form>
 
-    <div th:if="${availableSessions == null || #lists.isEmpty(availableSessions)}" class="alert alert-warning">
-        Hiện tại chưa có lịch tư vấn phù hợp.
-    </div>
+    <form th:action="@{/mentoring/student/book}" method="post" th:object="${bookingDTO}">
+        <input type="hidden" th:field="*{departmentId}">
 
-    <table th:if="${availableSessions != null && !#lists.isEmpty(availableSessions)}" class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Giảng viên</th>
-            <th>Khoa / Ngành</th>
-            <th>Phòng Lab</th>
-            <th>Thiết bị</th>
-            <th>Thời gian</th>
-            <th>Chủ đề</th>
-            <th>Hành động</th>
-        </tr>
-        </thead>
+        <div class="form-group">
+            <label>Giảng viên</label>
+            <select th:field="*{lecturerId}" class="form-control" required>
+                <option value="">-- Chọn giảng viên --</option>
+                <option th:each="l : ${lecturers}"
+                        th:value="${l.id}"
+                        th:text="${l.profile != null ? l.profile.fullName : l.username}">
+                </option>
+            </select>
+            <small th:if="${selectedDepartmentId == null}" class="text-muted">
+                Hãy chọn khoa/ngành trước để hiện danh sách giảng viên.
+            </small>
+        </div>
 
-        <tbody>
-        <tr th:each="s : ${availableSessions}">
-            <td th:text="${s.lecturer != null && s.lecturer.profile != null ? s.lecturer.profile.fullName : 'Không rõ'}"></td>
+        <div class="form-group">
+            <label>Ngày giờ tư vấn</label>
+            <input type="datetime-local" th:field="*{startTime}" class="form-control" required>
+        </div>
 
-            <td th:text="${s.lecturer != null && s.lecturer.lecturer != null && s.lecturer.lecturer.department != null ? s.lecturer.lecturer.department.name : 'Chưa có khoa'}"></td>
+        <div class="form-group">
+            <label>Chủ đề cần tư vấn</label>
+            <input type="text" th:field="*{topic}" class="form-control" required>
+        </div>
 
-            <td th:text="${s.labRoom != null ? s.labRoom.roomName : 'Chưa có phòng'}"></td>
-
-            <td th:text="${s.equipment != null ? s.equipment.name : 'Không có'}"></td>
-
-            <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
-
-            <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
-
-            <td>
-                <form th:action="@{/mentoring/student/register}" method="post">
-                    <input type="hidden" name="sessionId" th:value="${s.id}">
-                    <button type="submit" class="btn btn-success btn-sm">Tạo phiếu đăng ký</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
-    <a th:href="@{/student/home}" class="btn btn-secondary">Quay lại</a>
+        <button type="submit" class="btn btn-success">Đặt lịch</button>
+        <a th:href="@{/student/home}" class="btn btn-secondary">Quay lại</a>
+    </form>
 </div>
 </body>
 </html>
