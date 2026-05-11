@@ -18,7 +18,6 @@ public class BorrowingRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String status;
     private Date createdAt;
     private Date exportedAt;

@@ -15,6 +15,7 @@ import com.demo.repository.MentoringSessionRepository;
 import com.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -169,8 +170,7 @@ public class MentoringService {
 
     @Transactional
     public void confirmExport(Long borrowingRecordId) {
-        BorrowingRecord borrowingRecord = borrowingRecordRepository.findById(borrowingRecordId)
-                .orElseThrow(() -> new IllegalArgumentException("Phiếu mượn không tồn tại"));
+        BorrowingRecord borrowingRecord = borrowingRecordRepository.findById(borrowingRecordId).orElseThrow(() -> new IllegalArgumentException("Phiếu mượn không tồn tại"));
 
         if (!"WAITING_ALLOCATION".equals(borrowingRecord.getStatus())) {
             throw new IllegalArgumentException("Chỉ xuất kho phiếu đang chờ cấp phát");
@@ -206,4 +206,37 @@ public class MentoringService {
             mentoringSessionRepository.save(session);
         }
     }
+
+    @Transactional
+    public void cancelByStudent(Long sessionId, User student) {
+        if (student == null || !"STUDENT".equals(student.getRole())) {
+            throw new IllegalArgumentException("Bạn cần đăng nhập bằng tài khoản sinh viên");
+        }
+
+        MentoringSession mentoringSession = getById(sessionId);
+        if (mentoringSession == null) {
+            throw new IllegalArgumentException("Lịch tư vấn không tồn tại");
+        }
+
+        if (mentoringSession.getStudent() == null ||
+                !mentoringSession.getStudent().getId().equals(student.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền hủy lịch này");
+        }
+
+        if (!"PENDING".equals(mentoringSession.getStatus())) {
+            throw new IllegalArgumentException("Chỉ có thể hủy lịch đang chờ xác nhận");
+        }
+
+        mentoringSession.setStatus("CANCELLED");
+        mentoringSessionRepository.save(mentoringSession);
+    }
+
+    public List<Object[]> getBorrowedEquipmentStats() {
+        return borrowingRecordRepository.getBorrowedEquipmentStats();
+    }
+
+    public List<Object[]> getTopLecturers() {
+        return mentoringSessionRepository.getTopLecturers(PageRequest.of(0, 5));
+    }
+
 }

@@ -44,7 +44,7 @@
 
                 <div class="form-group">
                     <label>Đánh giá năng lực</label>
-                    <select name="competencyLevel" class="form-control" required>
+                    <select name="competencyLevel" class="form-control" >
                         <option value="">-- Chọn mức đánh giá --</option>
                         <option value="Tốt">Tốt</option>
                         <option value="Khá">Khá</option>
@@ -55,7 +55,7 @@
 
                 <div class="form-group">
                     <label>Nhận xét</label>
-                    <textarea name="comment" class="form-control" rows="3" required></textarea>
+                    <textarea name="comment" class="form-control" rows="3" ></textarea>
                 </div>
 
                 <div class="form-row">
@@ -105,7 +105,7 @@
                 <span th:if="${s.status == 'WAITING_ALLOCATION'}" class="badge badge-info">Chờ cấp phát</span>
                 <span th:if="${s.status == 'EXPORTED'}" class="badge badge-success">Đã xuất kho</span>
                 <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Bị từ chối</span>
-            </td>
+                <span th:if="${s.status == 'CANCELLED'}" class="badge badge-secondary">Sinh viên đã hủy</span>            </td>
         </tr>
         <tr th:if="${allSessions == null || #lists.isEmpty(allSessions)}">
             <td colspan="4" class="text-center text-muted">Chưa có lịch tư vấn nào.</td>

@@ -5,8 +5,10 @@ import lombok.*;
 
 @Entity
 @Table(name = "user_profiles")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class UserProfile {
     @Id

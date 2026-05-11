@@ -15,7 +15,7 @@
     <form th:action="@{/mentoring/student/add}" method="get" class="mb-3">
         <div class="form-group">
             <label>Khoa / Ngành</label>
-            <select name="departmentId" class="form-control" onchange="this.form.submit()" required>
+            <select name="departmentId" class="form-control" onchange="this.form.submit()" >
                 <option value="">-- Chọn khoa/ngành --</option>
                 <option th:each="d : ${departments}"
                         th:value="${d.id}"
@@ -31,7 +31,7 @@
 
         <div class="form-group">
             <label>Giảng viên</label>
-            <select th:field="*{lecturerId}" class="form-control" required>
+            <select th:field="*{lecturerId}" class="form-control" >
                 <option value="">-- Chọn giảng viên --</option>
                 <option th:each="l : ${lecturers}"
                         th:value="${l.id}"
@@ -45,12 +45,12 @@
 
         <div class="form-group">
             <label>Ngày giờ tư vấn</label>
-            <input type="datetime-local" th:field="*{startTime}" class="form-control" required>
+            <input type="datetime-local" th:field="*{startTime}" class="form-control" >
         </div>
 
         <div class="form-group">
             <label>Chủ đề cần tư vấn</label>
-            <input type="text" th:field="*{topic}" class="form-control" required>
+            <input type="text" th:field="*{topic}" class="form-control" >
         </div>
 
         <button type="submit" class="btn btn-success">Đặt lịch</button>

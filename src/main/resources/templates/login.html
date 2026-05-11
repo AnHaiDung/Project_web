@@ -14,10 +14,10 @@
 
             <div th:if="${msgError}" class="alert alert-danger" th:text="${msgError}"></div>
 
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/login}" method="post" novalidate>
                 <div class="form-group">
                     <label>Tên đăng nhập</label>
-                    <input type="text" name="username" class="form-control">
+                    <input type="text" name="username" class="form-control" th:value="${username}">
                     <small th:if="${usernameError}" class="text-danger" th:text="${usernameError}"></small>
                 </div>
 

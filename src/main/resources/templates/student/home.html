@@ -33,25 +33,43 @@
             <th>Giảng viên</th>
             <th>Chủ đề</th>
             <th>Trạng thái</th>
+            <th>Hành động</th>
         </tr>
         </thead>
 
         <tbody>
         <tr th:each="s : ${mySessions}">
             <td th:text="${s.startTime != null ? #dates.format(s.startTime, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian'}"></td>
+
             <td th:text="${s.lecturer != null && s.lecturer.profile != null ? s.lecturer.profile.fullName : 'Không rõ'}"></td>
+
             <td th:text="${s.topic != null ? s.topic : 'Chưa có chủ đề'}"></td>
+
             <td>
                 <span th:if="${s.status == 'PENDING'}" class="badge badge-warning">Chờ xác nhận</span>
                 <span th:if="${s.status == 'WAITING_ALLOCATION'}" class="badge badge-info">Chờ cấp phát</span>
                 <span th:if="${s.status == 'EXPORTED'}" class="badge badge-success">Đã xuất kho</span>
                 <span th:if="${s.status == 'REJECTED'}" class="badge badge-danger">Bị từ chối</span>
+                <span th:if="${s.status == 'CANCELLED'}" class="badge badge-secondary">Đã hủy</span>
                 <span th:if="${s.status == null}" class="badge badge-secondary">Chưa có trạng thái</span>
+            </td>
+
+            <td>
+                <form th:if="${s.status == 'PENDING'}"
+                      th:action="@{/student/sessions/cancel/{id}(id=${s.id})}"
+                      method="post"
+                      onsubmit="return confirm('Bạn có chắc muốn hủy lịch này?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Hủy lịch</button>
+                </form>
+
+                <span th:if="${s.status != 'PENDING'}" class="text-muted small">
+                    Không thể hủy
+                </span>
             </td>
         </tr>
 
         <tr th:if="${mySessions == null || #lists.isEmpty(mySessions)}">
-            <td colspan="4" class="text-center text-muted">Bạn chưa đặt lịch tư vấn nào.</td>
+            <td colspan="5" class="text-center text-muted">Bạn chưa đặt lịch tư vấn nào.</td>
         </tr>
         </tbody>
     </table>

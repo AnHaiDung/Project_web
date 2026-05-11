@@ -1,38 +1,219 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Admin Dashboard</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-<nav class="navbar navbar-dark bg-dark p-3">
-    <a class="navbar-brand" href="#">Smart Academic Admin</a>
-    <span class="navbar-text text-white">
-        Chào, <b th:text="${session.userSession.profile != null ? session.userSession.profile.fullName : 'Admin'}"></b>
-    </span>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" th:href="@{/admin/home}">Smart Academic Admin</a>
+
+    <div class="ml-auto text-white">
+        Xin chào,
+        <b th:text="${session.userSession.profile != null ? session.userSession.profile.fullName : session.userSession.username}"></b>
+        |
+        <a th:href="@{/logout}" class="text-danger ml-2">Đăng xuất</a>
+    </div>
 </nav>
 
-<div class="container mt-5">
-    <div class="row text-center">
-        <div class="col-md-4 mb-3">
-            <div class="card p-3">
-                <h5>Quản lý thiết bị</h5>
-                <a th:href="@{/admin/equipments}" class="btn btn-primary">Xem danh sách</a>
+<div class="container mt-4">
+    <div class="mb-4">
+        <h3 class="mb-1">Dashboard quản trị</h3>
+        <p class="text-muted mb-0">
+            Theo dõi thống kê hệ thống, quản lý thiết bị và duyệt phiếu cấp phát.
+        </p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Quản lý thiết bị</h5>
+                    <p class="card-text text-muted">
+                        Thêm, sửa, xóa thiết bị/tài liệu thực hành và kiểm tra số lượng tồn kho.
+                    </p>
+
+                    <a th:href="@{/admin/equipments}" class="btn btn-primary">
+                        Đi đến quản lý thiết bị
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card p-3">
-                <h5>Phiếu chờ cấp phát</h5>
-                <a th:href="@{/admin/borrowings}" class="btn btn-success">Xem phiếu mượn</a>
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Phiếu chờ cấp phát</h5>
+                    <p class="card-text text-muted">
+                        Xem các phiếu mượn thiết bị đang chờ duyệt và xác nhận xuất kho.
+                    </p>
+
+                    <a th:href="@{/admin/borrowings}" class="btn btn-success">
+                        Đi đến phiếu chờ cấp phát
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <hr>
-    <a th:href="@{/logout}" class="btn btn-danger">Đăng xuất</a>
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header font-weight-bold">
+                    Biểu đồ thiết bị đã xuất kho
+                </div>
+                <div class="card-body">
+                    <canvas id="equipmentChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header font-weight-bold">
+                    Top 5 giảng viên có lượt tư vấn nhiều nhất
+                </div>
+                <div class="card-body">
+                    <canvas id="lecturerChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header font-weight-bold">
+                    Bảng thống kê thiết bị đã xuất kho
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>Thiết bị</th>
+                            <th class="text-right">Số lượng đã xuất</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="item : ${equipmentStats}">
+                            <td th:text="${item[0]}">Tên thiết bị</td>
+                            <td class="text-right" th:text="${item[1]}">0</td>
+                        </tr>
+
+                        <tr th:if="${equipmentStats == null || #lists.isEmpty(equipmentStats)}">
+                            <td colspan="2" class="text-center text-muted py-4">
+                                Chưa có dữ liệu thiết bị đã xuất kho
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header font-weight-bold">
+                    Bảng Top 5 giảng viên
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>Giảng viên</th>
+                            <th class="text-right">Số lượt tư vấn</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="lecturer : ${topLecturers}">
+                            <td th:text="${lecturer[0]}">Tên giảng viên</td>
+                            <td class="text-right" th:text="${lecturer[1]}">0</td>
+                        </tr>
+
+                        <tr th:if="${topLecturers == null || #lists.isEmpty(topLecturers)}">
+                            <td colspan="2" class="text-center text-muted py-4">
+                                Chưa có dữ liệu tư vấn
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script th:inline="javascript">
+    const equipmentStats = /*[[${equipmentStats}]]*/ [];
+    const topLecturers = /*[[${topLecturers}]]*/ [];
+
+    const equipmentLabels = equipmentStats.length > 0
+        ? equipmentStats.map(item => item[0])
+        : ['Chưa có dữ liệu'];
+
+    const equipmentData = equipmentStats.length > 0
+        ? equipmentStats.map(item => Number(item[1]))
+        : [0];
+
+    const lecturerLabels = topLecturers.length > 0
+        ? topLecturers.map(item => item[0])
+        : ['Chưa có dữ liệu'];
+
+    const lecturerData = topLecturers.length > 0
+        ? topLecturers.map(item => Number(item[1]))
+        : [0];
+
+    new Chart(document.getElementById('equipmentChart'), {
+        type: 'bar',
+        data: {
+            labels: equipmentLabels,
+            datasets: [{
+                label: 'Số lượng đã xuất',
+                data: equipmentData,
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('lecturerChart'), {
+        type: 'doughnut',
+        data: {
+            labels: lecturerLabels,
+            datasets: [{
+                label: 'Số lượt tư vấn',
+                data: lecturerData,
+                backgroundColor: [
+                    '#28a745',
+                    '#17a2b8',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6f42c1'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
 </body>
 </html>

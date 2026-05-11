@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -29,13 +30,20 @@ public class AuthController {
                           Model model,
                           HttpSession session) {
 
+        boolean hasError = false;
+
         if (username == null || username.trim().isEmpty()) {
             model.addAttribute("usernameError", "Tên đăng nhập không được để trống");
-            return "login";
+            hasError = true;
         }
 
         if (password == null || password.trim().isEmpty()) {
             model.addAttribute("passwordError", "Mật khẩu không được để trống");
+            hasError = true;
+        }
+
+        if (hasError) {
+            model.addAttribute("username", username);
             return "login";
         }
 
@@ -49,12 +57,17 @@ public class AuthController {
         }
 
         model.addAttribute("msgError", "Tài khoản hoặc mật khẩu không chính xác");
+        model.addAttribute("username", username);
         return "login";
     }
 
     @GetMapping("/admin/home")
-    public String adminHome(HttpSession session) {
+    public String adminHome(HttpSession session, Model model) {
         if (isNotRole(session, "ADMIN")) return "redirect:/login";
+
+        model.addAttribute("equipmentStats", mentoringService.getBorrowedEquipmentStats());
+        model.addAttribute("topLecturers", mentoringService.getTopLecturers());
+
         return "admin/home";
     }
 
@@ -71,36 +84,46 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String showRegister() {
+    public String showRegister(Model model) {
+        if (!model.containsAttribute("user")) {
+            model.addAttribute("user", new User());
+        }
         return "register";
     }
 
     @PostMapping("/register")
     public String doRegister(@ModelAttribute User user, Model model) {
+        boolean hasError = false;
+
         if (user.getProfile() == null ||
                 user.getProfile().getFullName() == null ||
                 user.getProfile().getFullName().trim().isEmpty()) {
             model.addAttribute("fullNameError", "Họ tên không được để trống");
-            return "register";
+            hasError = true;
         }
 
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             model.addAttribute("usernameError", "Tên đăng nhập không được để trống");
-            return "register";
+            hasError = true;
         }
 
         if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
             model.addAttribute("passwordError", "Mật khẩu không được để trống");
-            return "register";
-        }
-
-        if (user.getPassword().trim().length() < 6) {
+            hasError = true;
+        } else if (user.getPassword().trim().length() < 6) {
             model.addAttribute("passwordError", "Mật khẩu phải có ít nhất 6 ký tự");
-            return "register";
+            hasError = true;
         }
 
-        if (userService.isUsernameExist(user.getUsername())) {
+        if (user.getUsername() != null &&
+                !user.getUsername().trim().isEmpty() &&
+                userService.isUsernameExist(user.getUsername())) {
             model.addAttribute("usernameError", "Tên đăng nhập này đã tồn tại");
+            hasError = true;
+        }
+
+        if (hasError) {
+            model.addAttribute("user", user);
             return "register";
         }
 
@@ -117,5 +140,25 @@ public class AuthController {
     private boolean isNotRole(HttpSession session, String role) {
         User user = (User) session.getAttribute("userSession");
         return user == null || !role.equals(user.getRole());
+    }
+
+    @PostMapping("/student/sessions/cancel/{id}")
+    public String cancelSession(@PathVariable Long id,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("userSession");
+
+        if (user == null || !"STUDENT".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            mentoringService.cancelByStudent(id, user);
+            redirectAttributes.addFlashAttribute("msgSuccess", "Hủy lịch thành công");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("msgError", ex.getMessage());
+        }
+
+        return "redirect:/student/home";
     }
 }

@@ -8,8 +8,10 @@ import java.util.Date;
 
 @Entity
 @Table(name = "mentoring_sessions")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class MentoringSession {
     @Id
